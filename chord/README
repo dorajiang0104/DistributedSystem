@@ -1,0 +1,92 @@
+- Environment Setup
+
+This application need NodeJS version at least 14.0.0 and NPM version at least 6.14
+
+To install NodeJS
+
+if you want to install NodeJS via package manager
+https://nodejs.org/en/download/package-manager/
+
+or download a prebuild installer
+https://nodejs.org/en/download/
+
+Once you have NodeJS installed you should able to run 
+  
+  node --version
+
+and
+
+  npm --version
+
+to verify the version of node and npm.
+
+If you need to upgrade node version, check this article:
+https://stackoverflow.com/questions/10075990/upgrading-node-js-to-latest-version
+
+and if you need to upgrade npm version, check this doc:
+https://docs.npmjs.com/try-the-latest-stable-version-of-npm
+
+Once your Node environment set up is ready
+Check into the application folder, and run
+
+  npm i
+
+This should install all the package dependencies for you.
+If you have any issue running this command please delete the package-lock.json and try again.
+
+- Start a Chord
+To start a Chord, you can run the following command
+
+  npm run start -- -i <identifier> -p <port number> [-m <digital>]
+
+-i indicates the identifier
+-p is the port number
+-m is the digital number of to calculate the number the default value will be 4. Please note that right now, I am still hard code the hash algorithm that just use the 1st digit of sha1 id, so I don't recommand to modify this variable
+
+- Join a existing Chord
+Once you start the Chord, you should able to see the ip and port which the first node running on.
+To join the Chord you need to update your entry.json to make sure the content is match the existing node in Chore:
+Example:
+  {
+    "ip": "192.168.1.195",
+    "port": 6999 ,
+    "id": 1
+  }
+Once you setup the entry node, you can start a new nod with command
+
+  npm run start -- -i <identifier> -p <port number> --join|-j [-m <digital>] 
+
+
+The other argument is same with the command which we use to start a Chord, but the flag --join or -j is needed to ask the new created node load the entry.json and join the DHT.
+
+API:
+The follow endpoint can be accessed, if you want to view in browser, I recommand Chrome with https://chrome.google.com/webstore/detail/json-viewer/gbmdgpbipfallnflgajpaliibnhdgobh the have the data better parsed.
+
+1. http://<node address>/
+  Check the timestamp, meta information, successor pointer, predecessor pointer and finger table for the node.
+
+2. http://<node address>/data
+Check the data which store on the node, the `records` property is the active database and key can get address by Chord, the backup property is use to implement the replicant.
+
+2. http://<node address>/records
+Check only active records
+
+4. http://<node address>/get?(key=<key>|hash=<hash>)[&<with_timestamp=(true|false)>]
+Get the data by the key or the key's sha1 hash, if `with_timestamp` added, the timestamp of when record log into the database will send together.
+
+5.http://<node address>/set
+Set the data, this is a POST request, so it need to be sent with a request body, you can use following curl command to set data:
+  curl -XPOST -H "Content-type: application/json" -d '{"Test":["192.168.3.133"]}' 'http://localhost:7000/set'
+If the data set successed, the node will response with the hash of the of the key in data.
+
+6.http://<node address>/migrate
+This is a PUT request and usually just used by peers internally. but it also useful to test the how timestamp work. This is a example of migrate request curl command:
+  curl -XPUT -H "Content-type: application/json" -d '{"data":{"640ab2bae07bedc4c163f679a746f7ab7fb5d1fa":{"value":{"Test":["192.168.3.134"]},"timestamp":500}}}' 'http://localhost:7000/migrate'
+if the migrate success, node will response a JSON like { success: true }. Otherwise, the success value will be false and sent with message why it is failed.
+
+
+http://localhost:6999/get?key=Test
+
+
+
+
